@@ -125,8 +125,8 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 
 UniValue searchrawtransactions(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
-        throw runtime_error("searchrawtransactions <address> [verbose=1] [skip=0] [count=100]\n");
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 5)
+        throw runtime_error("searchrawtransactions <address> [verbose=1] [skip=0] [count=100] [reverse=0]\n");
 
     if (!fAddrIndex)
         throw JSONRPCError(RPC_MISC_ERROR, "Address index not enabled");
@@ -143,12 +143,15 @@ UniValue searchrawtransactions(const JSONRPCRequest& request)
     int nSkip = 0;
     int nCount = 100;
     bool fVerbose = true;
+    bool fReverse = false;
     if (request.params.size() > 1)
         fVerbose = (request.params[1].get_int() != 0);
     if (request.params.size() > 2)
         nSkip = request.params[2].get_int();
     if (request.params.size() > 3)
         nCount = request.params[3].get_int();
+    if (request.params.size() > 4)
+        fReverse = request.params[4].get_int();
 
     if (nSkip < 0)
         nSkip += setpos.size();
@@ -157,27 +160,49 @@ UniValue searchrawtransactions(const JSONRPCRequest& request)
     if (nCount < 0)
         nCount = 0;
 
-    std::set<CExtDiskTxPos>::const_iterator it = setpos.begin();
-    while (it != setpos.end() && nSkip--) it++;
-
     UniValue result(UniValue::VARR);
-    while (it != setpos.end() && nCount--) {
-        CTransactionRef tx;
-        uint256 hashBlock;
-        if (!ReadTransaction(tx, *it, hashBlock))
-            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Cannot read transaction from disk");
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << tx;
-        string strHex = HexStr(ssTx.begin(), ssTx.end());
-        if (fVerbose) {
-            UniValue object(UniValue::VOBJ);
-            TxToJSON(*tx, hashBlock, object);
-            object.push_back(Pair("hex", strHex));
-            result.push_back(object);
-        } else {
-            result.push_back(strHex);
+    if(fReverse) {
+        std::set<CExtDiskTxPos>::const_reverse_iterator it = setpos.rbegin();
+        while (it != setpos.rend() && nSkip--) it++;
+        while (it != setpos.rend() && nCount--) {
+            CTransactionRef tx;
+            uint256 hashBlock;
+            if (!ReadTransaction(tx, *it, hashBlock))
+                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Cannot read transaction from disk");
+            CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+            ssTx << tx;
+            string strHex = HexStr(ssTx.begin(), ssTx.end());
+            if (fVerbose) {
+                UniValue object(UniValue::VOBJ);
+                TxToJSON(*tx, hashBlock, object);
+                object.push_back(Pair("hex", strHex));
+                result.push_back(object);
+            } else {
+                result.push_back(strHex);
+            }
+            it++;
         }
-        it++;
+    } else {
+        std::set<CExtDiskTxPos>::const_iterator it = setpos.begin();
+        while (it != setpos.end() && nSkip--) it++;
+        while (it != setpos.end() && nCount--) {
+            CTransactionRef tx;
+            uint256 hashBlock;
+            if (!ReadTransaction(tx, *it, hashBlock))
+                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Cannot read transaction from disk");
+            CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+            ssTx << tx;
+            string strHex = HexStr(ssTx.begin(), ssTx.end());
+            if (fVerbose) {
+                UniValue object(UniValue::VOBJ);
+                TxToJSON(*tx, hashBlock, object);
+                object.push_back(Pair("hex", strHex));
+                result.push_back(object);
+            } else {
+                result.push_back(strHex);
+            }
+            it++;
+        }
     }
     return result;
 }
