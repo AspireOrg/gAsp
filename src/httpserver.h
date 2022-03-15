@@ -5,6 +5,7 @@
 #ifndef BITCOIN_HTTPSERVER_H
 #define BITCOIN_HTTPSERVER_H
 
+#include <deque>
 #include <string>
 #include <stdint.h>
 #include <functional>

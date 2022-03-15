@@ -7,7 +7,6 @@
 #include "reverselock.h"
 
 #include <assert.h>
-#include <boost/bind.hpp>
 #include <utility>
 
 CScheduler::CScheduler() : nThreadsServicingQueue(0), stopRequested(false), stopWhenEmpty(false)
