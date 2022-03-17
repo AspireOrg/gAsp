@@ -103,6 +103,7 @@ BITCOIN_CORE_H = \
   httpserver.h \
   indirectmap.h \
   init.h \
+  internal_miner.h \
   key.h \
   keystore.h \
   dbwrapper.h \
@@ -186,6 +187,7 @@ libbitcoin_server_a_SOURCES = \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
+  internal_miner.cpp \
   dbwrapper.cpp \
   merkleblock.cpp \
   miner.cpp \

@@ -19,6 +19,7 @@
 #include "consensus/validation.h"
 #include "httpserver.h"
 #include "httprpc.h"
+#include "internal_miner.h"
 #include "key.h"
 #include "validation.h"
 #include "miner.h"
@@ -1666,6 +1667,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (pwalletMain)
         pwalletMain->postInitProcess(threadGroup);
 #endif
+
+    // Start internal miner
+    threadGroup.create_thread(std::bind(&ThreadGaspMiner));
 
     return !fRequestShutdown;
 }
